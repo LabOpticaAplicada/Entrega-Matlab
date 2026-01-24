@@ -1,0 +1,397 @@
+
+clear all
+clc
+
+% leer imagen
+
+[file,path] = uigetfile({'*.bmp';'*.tif';'*.*'},'Select an Image');
+file1=fullfile(path,file);
+v=double(imread(file1));
+
+%%
+
+figure(1)
+imagesc(v)
+colormap gray
+axis tight equal
+title("Imagen original con ruido periódico")
+
+%hace falta hacer el resizing?
+
+%%
+% Representar TF
+
+vTF = fft2shift(v);
+
+mvTF = abs(vTF); %modulo de la transformada
+
+
+mvTF_n=mvTF./max(mvTF); %normalización
+
+[N,M]=size(v);
+
+%filtro
+Filtro = ones(N,M);
+Filtro(1:N,(M/2-5):(M/2+5))=0;
+Filtro((M/2-5):(M/2+5),1:N)=0;
+%Filtro((M/2-14-5):(M/2-14+5),1:N)=0;
+%Filtro((M/2+14-5):(M/2+14+5),1:N)=0;
+%Filtro((M/2+14-4):(M/2+14+4),1:N)=0;
+
+Filtro((M/2-5):(M/2+5),(M/2-5):(M/2+5))=1; %mantener modulo central
+%Filtro(1:N,(1):(75))=1;
+%Filtro(1:N,(M-75):(M))=1;
+
+%Filtro diagonal
+F2 = ones(N,M);
+%Inicio i final de la recta
+x1 = 1; 
+x2 = 520;
+y1 = 30; %ordenada a l'origen
+y2 = 490;
+
+%Pendiente recta
+m = (y2 - y1) / (x2 - x1);
+
+%x=1:1:520; valores de eje x
+%y=mx+y1;
+
+for i=1:30
+    for j=1:M
+        F2(floor(m*j)+y1+15-i,j)=0;
+    end
+end
+F2((M/2-5):(M/2+5),(M/2-5):(M/2+5))=1; %mantener modulo central
+
+
+%aplicar filtros
+vTF_filt= Filtro .* vTF;
+vTF_filt= F2 .* vTF_filt;
+
+mvTF_filt=abs(vTF_filt);
+mvTF_filt_n=mvTF_filt./max(mvTF_filt);
+
+v_filt = ifft2shift(vTF_filt);
+mv_filt_1 = abs(v_filt);
+
+
+figure (2)
+subplot(1,2,1)
+imagesc(v)
+colormap gray
+axis tight equal
+subplot(1,2,2)
+imagesc(mvTF_n)
+colormap gray
+axis tight equal
+
+figure (3)
+subplot(1,2,1)
+imagesc(v)
+colormap gray
+axis tight equal
+subplot(1,2,2)
+imagesc(log(mvTF))
+colormap gray
+axis tight equal
+
+
+figure(4)
+subplot(1,2,1)
+imagesc(mvTF_filt_n)
+colormap gray
+axis tight equal
+subplot(1,2,2)
+imagesc(mv_filt_1)
+colormap gray
+axis tight equal
+
+
+% Modificar filtros
+%filtro
+Filtro = ones(N,M);
+Filtro(1:N,(M/2-3):(M/2+3))=0;
+Filtro((M/2-3):(M/2+3),1:N)=0;
+
+Filtro((M/2-5):(M/2+5),(M/2-5):(M/2+5))=1; %mantener modulo central
+
+%Filtro diagonal
+F2 = ones(N,M);
+%Inicio i final de la recta
+x1 = 1; 
+x2 = 520;
+y1 = 30; %ordenada a l'origen
+y2 = 490;
+
+%Pendiente recta
+m = (y2 - y1) / (x2 - x1);
+
+%x=1:1:520; valores de eje x
+%y=mx+y1;
+
+G=10;
+for i=1:G
+    for j=1:M
+        F2(floor(m*j)+y1+G/2-i,j)=0;
+    end
+end
+F2((M/2-5):(M/2+5),(M/2-5):(M/2+5))=1; %mantener modulo central
+
+%Mantener freqs altas
+A = 175;
+
+F2(1:N,(1):(A))=1;
+F2(1:N,(M-A):(M))=1;
+Filtro(1:N,(1):(A))=1;
+Filtro(1:N,(M-A):(M))=1;
+
+%aplicar filtros
+vTF_filt= Filtro .* vTF;
+vTF_filt= F2 .* vTF_filt;
+
+mvTF_filt=abs(vTF_filt);
+mvTF_filt_n=mvTF_filt./max(mvTF_filt);
+
+v_filt = ifft2shift(vTF_filt);
+mv_filt_2 = abs(v_filt);
+
+
+
+figure(5)
+subplot(1,2,1)
+imagesc(mvTF_filt_n)
+colormap gray
+axis tight equal
+subplot(1,2,2)
+imagesc(mv_filt_2)
+colormap gray
+axis tight equal
+
+%filtro
+
+T = 0.25;
+Filtro = ones(N,M);
+Filtro(1:N,(M/2-3):(M/2+3))=T;
+Filtro((M/2-3):(M/2+3),1:N)=T;
+
+Filtro((M/2-5):(M/2+5),(M/2-5):(M/2+5))=1; %mantener modulo central
+
+%Filtro diagonal
+F2 = ones(N,M);
+%Inicio i final de la recta
+x1 = 1; 
+x2 = 520;
+y1 = 30; %ordenada a l'origen
+y2 = 490;
+
+%Pendiente recta
+m = (y2 - y1) / (x2 - x1);
+
+%x=1:1:520; valores de eje x
+%y=mx+y1;
+
+G=10;
+for i=1:G
+    for j=1:M
+        F2(floor(m*j)+y1+G/2-i,j)=T;
+    end
+end
+F2((M/2-5):(M/2+5),(M/2-5):(M/2+5))=1; %mantener modulo central
+
+%Mantener freqs altas
+A = 175;
+
+F2(1:N,(1):(A))=1;
+F2(1:N,(M-A):(M))=1;
+Filtro(1:N,(1):(A))=1;
+Filtro(1:N,(M-A):(M))=1;
+
+%aplicar filtros
+vTF_filt= Filtro .* vTF;
+vTF_filt= F2 .* vTF_filt;
+
+mvTF_filt=abs(vTF_filt);
+mvTF_filt_n=mvTF_filt./max(mvTF_filt);
+
+v_filt = ifft2shift(vTF_filt);
+mv_filt_3 = abs(v_filt);
+
+
+
+figure(6)
+subplot(1,2,1)
+imagesc(mvTF_filt_n)
+colormap gray
+axis tight equal
+subplot(1,2,2)
+imagesc(mv_filt_3)
+colormap gray
+axis tight equal
+
+figure(7)
+subplot(1,4,1)
+imagesc(v)
+colormap gray
+axis tight equal
+subplot(1,4,2)
+imagesc(mv_filt_1)
+colormap gray
+axis tight equal
+subplot(1,4,3)
+imagesc(mv_filt_2)
+colormap gray
+axis tight equal
+subplot(1,4,4)
+imagesc(mv_filt_3)
+colormap gray
+axis tight equal
+
+figure(8)
+subplot(1,3,1)
+imagesc(v)
+colormap gray
+axis tight equal
+subplot(1,3,2)
+imagesc(mv_filt_1)
+colormap gray
+axis tight equal
+subplot(1,3,3)
+imagesc(mv_filt_2)
+colormap gray
+axis tight equal
+
+
+%%
+% FILTRO 3
+
+Filtro3 = ones(N,M);
+
+% Filtro 217*217
+
+
+Filtro(1:N,(M/2-3):(M/2+3))=0;
+
+% Filtro 297*297
+
+%Mantener freqs altas
+A = 175;
+
+F2(1:N,(1):(A))=1;
+F2(1:N,(M-A):(M))=1;
+Filtro(1:N,(1):(A))=1;
+Filtro(1:N,(M-A):(M))=1;
+
+%aplicar filtros
+vTF_filt= Filtro .* vTF;
+vTF_filt= F2 .* vTF_filt;
+
+mvTF_filt=abs(vTF_filt);
+mvTF_filt_n=mvTF_filt./max(mvTF_filt);
+
+v_filt = ifft2shift(vTF_filt);
+mv_filt_2 = abs(v_filt);
+
+
+
+figure(5)
+subplot(1,2,1)
+imagesc(mvTF_filt_n)
+colormap gray
+axis tight equal
+subplot(1,2,2)
+imagesc(mv_filt_2)
+colormap gray
+axis tight equal
+
+%filtro
+
+T = 0.25;
+Filtro = ones(N,M);
+Filtro(1:N,(M/2-3):(M/2+3))=T;
+Filtro((M/2-3):(M/2+3),1:N)=T;
+
+Filtro((M/2-5):(M/2+5),(M/2-5):(M/2+5))=1; %mantener modulo central
+
+%Filtro diagonal
+F2 = ones(N,M);
+%Inicio i final de la recta
+x1 = 1; 
+x2 = 520;
+y1 = 30; %ordenada a l'origen
+y2 = 490;
+
+%Pendiente recta
+m = (y2 - y1) / (x2 - x1);
+
+%x=1:1:520; valores de eje x
+%y=mx+y1;
+
+G=10;
+for i=1:G
+    for j=1:M
+        F2(floor(m*j)+y1+G/2-i,j)=T;
+    end
+end
+F2((M/2-5):(M/2+5),(M/2-5):(M/2+5))=1; %mantener modulo central
+
+%Mantener freqs altas
+A = 175;
+
+F2(1:N,(1):(A))=1;
+F2(1:N,(M-A):(M))=1;
+Filtro(1:N,(1):(A))=1;
+Filtro(1:N,(M-A):(M))=1;
+
+%aplicar filtros
+vTF_filt= Filtro .* vTF;
+vTF_filt= F2 .* vTF_filt;
+
+mvTF_filt=abs(vTF_filt);
+mvTF_filt_n=mvTF_filt./max(mvTF_filt);
+
+v_filt = ifft2shift(vTF_filt);
+mv_filt_3 = abs(v_filt);
+
+
+
+figure(6)
+subplot(1,2,1)
+imagesc(mvTF_filt_n)
+colormap gray
+axis tight equal
+subplot(1,2,2)
+imagesc(mv_filt_3)
+colormap gray
+axis tight equal
+
+figure(7)
+subplot(1,4,1)
+imagesc(v)
+colormap gray
+axis tight equal
+subplot(1,4,2)
+imagesc(mv_filt_1)
+colormap gray
+axis tight equal
+subplot(1,4,3)
+imagesc(mv_filt_2)
+colormap gray
+axis tight equal
+subplot(1,4,4)
+imagesc(mv_filt_3)
+colormap gray
+axis tight equal
+
+figure(8)
+subplot(1,3,1)
+imagesc(v)
+colormap gray
+axis tight equal
+subplot(1,3,2)
+imagesc(mv_filt_1)
+colormap gray
+axis tight equal
+subplot(1,3,3)
+imagesc(mv_filt_2)
+colormap gray
+axis tight equal
