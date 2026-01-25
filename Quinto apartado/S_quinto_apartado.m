@@ -21,7 +21,7 @@ theta = angulo * pi / 180;   % radianes
 
 k = -(L-1)/2 : (L-1)/2;
 
-x = centro + k * cos(theta);
+x = centro -k * cos(theta);
 y = centro + k * sin(theta);
 
 x = round(x);
