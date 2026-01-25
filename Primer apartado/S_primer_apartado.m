@@ -4,7 +4,40 @@ N=128;
 %bucle
 x=0:N-1; %fs=1
 
+v_plot=[0.2,0.4,0.6];
 figure(1)
+for i = 1:length(v_plot)
+    v = v_plot(i);
+  
+    subplot(2,3,i)
+    s=sin(2*pi*v*x);
+    f = (-N/2:N/2-1)/N;
+    S=fftshift(fft(s))/N;
+    plot(x, s, '-')
+    hold on
+    plot(x, s, 'o', 'MarkerSize', 3,'MarkerFaceColor', 'red')
+    hold off
+    xlabel('x')
+    ylabel('f(x)')
+    xlim([-5 70])  
+    ylim([-1.2 1.2])
+    yline(0,Linewidth=1)
+    xline(N,Linewidth=0.5)
+    xline(0,Linewidth=1)
+    title(sprintf('Seno para frecuencia \\nu=%.2f ',v))
+
+    subplot(2,3,i+3)
+    plot(f, abs(S), '-')
+    hold on
+    plot(f, abs(S), 'o', 'MarkerSize', 3,'MarkerFaceColor', 'red')
+    hold off
+    yline(0,Linewidth=1)
+    xline(0,Linewidth=1)
+    xlabel('\nu')
+    ylabel('F(\nu)/N')
+end
+
+figure(2)
 for v = 0:0.05:2  %aliasing fs/2=0.5
     s=sin(2*pi*v*x);
     f = (-N/2:N/2-1)/N;
@@ -36,9 +69,9 @@ for v = 0:0.05:2  %aliasing fs/2=0.5
 
 
     if v==0.5
-        pause(4)
+        pause(2)
     else 
-        pause(0.3)
+        pause(0.2)
     end 
 end
 
@@ -54,7 +87,7 @@ nu=1.2;
 A1=10;
 s=sin(2*pi*nu*x);
 s_dec1=s.*exp(-x/A1);
-figure(2)
+figure(3)
 
 sgtitle('Función y transformada para \nu=1.2')
 subplot(2,2,1)
@@ -118,7 +151,7 @@ N=64;
 x=0:N-1;
 nu=1.2;
 s=sin(2*pi*nu*x);
-figure(3)
+figure(4)
 t=linspace(0,100,100);
 for i=1:length(t)
     A=t(i);
@@ -166,7 +199,7 @@ s2=a2*sin(2*pi*nu2*x).*exp(-x/A2);
 s=s1+s2;
 S=fftshift(fft(s));
 
-figure(4)
+figure(5)
 subplot(1,2,1)
 plot(x,s)
 hold on
@@ -188,3 +221,4 @@ yline(0,Linewidth=1)
 xline(0,Linewidth=1)
 xlabel('\nu')
 ylabel('F(\nu)/N')
+
