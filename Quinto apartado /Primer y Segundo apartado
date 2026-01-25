@@ -1,5 +1,4 @@
 %% 5. Simulación de Imagen Movida (Interactivo)
-clc; clear; close all;
 
 % --- CONFIGURACIÓN ---
 N = 256; % Tamaño de la imagen (resolución espacial)
@@ -14,23 +13,34 @@ if L > N
 end
 
 %% 5.1 Construcción de la PSF (Trayectoria Rectilínea)
-PSF = zeros(N, N);
+PSF = zeros(N,N);
 centro = floor(N/2) + 1;
 
-% Lógica de índices para centrar perfectamente la línea sea L par o impar
-inicio = centro - floor(L/2);
-fin    = centro + ceil(L/2) - 1;
+angulo = input('Introduce el ángulo del movimiento (grados): ');
+theta = angulo * pi / 180;   % radianes
 
-% Asignación de valores (Normalización: suma total = 1)
-PSF(centro, inicio:fin) = 1/L; 
+k = -(L-1)/2 : (L-1)/2;
 
+x = centro + k * cos(theta);
+y = centro + k * sin(theta);
+
+x = round(x);
+y = round(y);
+
+validos = x >= 1 & x <= N & y >= 1 & y <= N;
+x = x(validos);
+y = y(validos);
+
+PSF(sub2ind([N N], y, x)) = 1;
+PSF = PSF / sum(PSF(:));
 %% 5.2 Cálculo de la MTF
 % Calculamos la FFT 2D y centramos
 OTF = fftshift(fft2(PSF));
 MTF = abs(OTF);
 
 %% Representación Gráfica (Plots)
-figure('Name', ['Análisis para L = ' num2str(L)], 'Color', 'w');
+figure('Name', ['Análisis para L = ' num2str(L) ...
+               ' y \theta = ' num2str(angulo)], 'Color', 'w');
 
 % 1. Visualizar la PSF (El "borrón")
 subplot(2,2,1);
@@ -58,3 +68,47 @@ xlim([-0.1 0.1]); % Zoom en la zona central para ver bien la Sinc
 % Añadir nota sobre el primer cero
 primer_cero = 1/L;
 xline(primer_cero, '--r', ['Primer cero: 1/L = ' num2str(primer_cero, '%.3f')]);
+
+%% 5.3 
+
+%abrimos imagen deseada
+[file,path] = uigetfile({'*.bmp';'*.tif';'*.*'},'Select an Image');
+file1 = fullfile(path,file);
+v=double(imread(file1));
+v = imresize(v, [N N]);
+
+V=fft2shift(v);
+
+%convolucion usamos que la transformada de la convolución es el producto de
+%transformadas
+H=V.*MTF;
+h=real(ifft2shift(H)); %imagen movida
+
+%dibujamos la imagen movida y la original
+figure(2)
+subplot(1,2,1)
+imagesc(v)
+colormap gray
+axis tight equal
+
+subplot(1,2,2)
+imagesc(h)
+colormap gray
+axis tight equal
+
+%% 5.4 
+
+epsilon = 1e-3;
+FTh=fft2shift(h);
+figure(3)
+subplot(1,2,1)
+imagesc(h)
+colormap gray
+axis tight equal
+
+s=real(ifft2shift(FTh./(MTF+epsilon)));
+subplot(1,2,2)
+imagesc(s)
+colormap gray
+axis tight equal
+
